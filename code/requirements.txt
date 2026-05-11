@@ -1,0 +1,15 @@
+polars
+duckdb
+pydantic
+tsfresh
+stumpy
+scikit-learn
+xgboost
+river
+optuna
+mlflow
+ruff
+pytest
+hypothesis
+pytest-cov
+streamlit

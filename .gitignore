@@ -1,0 +1,40 @@
+# Virtual environment
+.venv/
+code/chainhomeai.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Data files (raw & processed — tracked separately or too large for git)
+code/data/raw/
+code/data/synthetic/
+code/data/processed/
+
+# MLflow artefacts
+code/mlruns/
+
+# FAISS index (rebuilt from source)
+code/rag_index/
+
+# Ruff cache
+.ruff_cache/
+
+# Pytest cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / OS
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
