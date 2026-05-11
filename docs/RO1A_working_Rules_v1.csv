@@ -1,0 +1,13 @@
+Parameter,Benchmark Data,Idle_Value,Stabilization_Mins,Allowed_Variance_Pct,Normal_Range_Min,Normal_Range_Max,Failure_Indicator
+RO1A_Feed_Press,21.25,0.0,5.0,2.0,20.825,21.675,Machinery/Flow Risk
+RO1A_Inlet_Cond,15332.683,,0.0,8.0,14106.069,16559.298,Water Quality Drift
+RO1A_Inlet_Flow,24.6,0.0,5.0,2.0,24.108,25.092,Machinery/Flow Risk
+RO1A_Inlet_ORP,1185.0,,0.0,8.0,1090.2,1279.8,Water Quality Drift
+RO1A_Inlet_pH,9.5,,0.0,8.0,9.0,10.0,Water Quality Drift
+RO1A_Perm_Cond,133.25,,0.0,8.0,122.59,143.91,Water Quality Drift
+RO1A_Perm_Flow,16.73,0.0,5.0,2.0,16.395,17.065,Machinery/Flow Risk
+RO1A_Perm_pH,8.97,0.0,5.0,5.0,8.47,9.47,Water Quality Drift
+RO1A_Reject_Press,14.9,0.0,5.0,8.0,13.708,16.092,Machinery/Flow Risk
+RO1A_Reject_Flow,7.87,0.0,5.0,8.0,7.24,8.5,Machinery/Flow Risk
+RO1A_Perm_Press,0.5,0.0,5.0,8.0,0.46,0.54,Machinery/Flow Risk
+RO1A_Feed_Temp,25.0,,0.0,5.0,23.75,26.25,Water Quality Drift
