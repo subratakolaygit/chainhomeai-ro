@@ -30,6 +30,10 @@ code/rag_index/
 .coverage
 htmlcov/
 
+# Office documents
+*.docx
+~$*.docx
+
 # IDE / OS
 .idea/
 .vscode/
