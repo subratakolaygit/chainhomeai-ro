@@ -369,3 +369,31 @@ Every subsequent phase (data, features, models, alerts, RAG) adds functionality 
 - Phase 0.5: GitHub Secrets (`HF_TOKEN`, `MLFLOW_TRACKING_URI`) to be added
 - Phase 0.6: Python virtual environment setup with pinned dependencies
 - Phase 0.7: Full `docker-compose.yml` with app + MLflow + Streamlit services
+
+---
+
+## [2026-05-13] — Phase 1C: Synthetic Dataset + Ingestion Pipeline
+
+### Components Introduced
+
+- **SyntheticRO1AGenerator** (`src/ingestion/synthetic_generator.py`): Generates 2,103,840 rows across 4 year-partitioned Parquet files using NumPy vectorised operations. Models realistic RO membrane degradation: NPD sawtooth fouling curves (slope ×1/1.25/2/3 per year), seasonal feed temperature (sine wave ±3°C), correlated sensor cross-effects (feed pressure rises / permeate flow drops as NPD degrades), Brownian-walk feed quality sensors, and CIP events that reset the fouling clock. Reason: provides a reproducible, physics-grounded training corpus with known ground-truth RUL labels.
+
+- **BadWindowInjector** (`src/ingestion/bad_window_injector.py`): Injects 32 bad-sensor windows (5 types: dropout, stuck-value, spike, calibration-drift, noise-burst) across all 4 years and writes a companion registry Parquet. Reason: the pipeline must handle realistic industrial data quality degradation; injecting known bad windows enables Stage 2 (Data Quality) to be validated against ground truth.
+
+- **SensorFrameSchema + EXPECTED_SCHEMA** (`src/ingestion/schema.py`): Zero-cost 23-column schema validator using `lf.collect_schema()` — checks column presence and dtypes without scanning any data. Reason: catches schema drift at pipeline entry before any computation is triggered.
+
+- **TagRegistry + TagSpec** (`src/tags/tag_registry.py`): Pydantic v2 model per sensor tag loaded from `RO1A_working_Rules_v1.csv`. Stores benchmark, normal range, idle value, stabilization time, and failure indicator. Reason: PI-System-inspired tag metadata store — single source of truth for all threshold decisions in Stage 2 (flagging) and Stage 5 (alerts).
+
+- **Ingestion loader** (`src/ingestion/loader.py`): `ingest_synthetic_data()` streams all year-partitioned Parquet as one validated LazyFrame via `scan_parquet("year=*/*.parquet")`. Never calls `.collect()`. Reason: enforces the memory ≤ 2 GB constraint — the entire 4-year dataset is queried lazily and only materialised in downstream stages.
+
+- **config.py**: All typed constants — paths, benchmarks, normal ranges, degradation parameters, noise scales, CIP schedules, alert thresholds. Reason: eliminates magic numbers from all pipeline modules.
+
+### What This Phase Achieves
+
+The data foundation is complete. A reproducible 4-year synthetic sensor dataset exists on disk, partitioned by year, with 23 columns including ground-truth `rul_hours`, `failure_imminent`, `cip_cycle_number`, and full data-quality provenance. The ingestion pipeline can stream any or all of this data as a validated Polars LazyFrame in under 1 second, ready for feature engineering in Phase 2.
+
+### Known Limitations / Next Steps
+
+- No stabilisation ramp after CIP completion (sensors jump back to operating values instantly rather than ramping over `stabilization_mins`). Acceptable for Phase 1; will be corrected in Phase 2 feature engineering.
+- Bad window `affected_sensors` during CIP is set to all 12 sensors for simplicity; Phase 2 Stage 2 (Data Quality) will refine per-sensor flagging.
+- Phase 2A next: plan PI-System-inspired feature engineering (rolling statistics, delta tags, NPD trend slope, CIP cycle detection).
