@@ -1,4 +1,5 @@
 """Injects synthetic bad-sensor windows into a generated year DataFrame."""
+
 from __future__ import annotations
 
 import logging
@@ -17,8 +18,12 @@ _ELIGIBLE: dict[str, list[str]] = {
     "dropout": ["ro1a_inlet_flow", "ro1a_feed_press", "ro1a_perm_flow", "ro1a_perm_cond"],
     "stuck_value": ["ro1a_inlet_ph", "ro1a_inlet_orp", "ro1a_inlet_cond", "ro1a_perm_cond"],
     "spike": [
-        "ro1a_feed_press", "ro1a_inlet_flow", "ro1a_perm_flow",
-        "ro1a_reject_press", "ro1a_perm_cond", "ro1a_inlet_ph",
+        "ro1a_feed_press",
+        "ro1a_inlet_flow",
+        "ro1a_perm_flow",
+        "ro1a_reject_press",
+        "ro1a_perm_cond",
+        "ro1a_inlet_ph",
     ],
     "calibration_drift": ["ro1a_perm_cond", "ro1a_inlet_ph"],
     "noise_burst": ["ro1a_reject_press", "ro1a_inlet_flow", "ro1a_perm_flow"],
@@ -75,9 +80,7 @@ class BadWindowInjector:
         self._rng = np.random.default_rng(seed=RANDOM_SEED + 100)
         self._next_window_id = starting_window_id
 
-    def inject(
-        self, df: pl.DataFrame, year: int
-    ) -> tuple[pl.DataFrame, list[dict]]:
+    def inject(self, df: pl.DataFrame, year: int) -> tuple[pl.DataFrame, list[dict]]:
         """
         Inject bad windows into df for the given year.
 
@@ -156,7 +159,11 @@ class BadWindowInjector:
                 )
                 logger.debug(
                     "  Injected %s on %s [%d:%d] wid=%d",
-                    issue_type, sensor, start_idx, end_idx, wid
+                    issue_type,
+                    sensor,
+                    start_idx,
+                    end_idx,
+                    wid,
                 )
 
         # Rebuild modified DataFrame columns
@@ -214,16 +221,14 @@ class BadWindowInjector:
             burst_sigma = BASE_NOISE_SIGMA.get(sensor, 0.05) * noise_scale * 8.0
             arr[start:end] += self._rng.normal(0.0, burst_sigma, end - start).astype(np.float32)
 
-    def _pick_start(
-        self, flag_list: list[str], n: int, duration: int
-    ) -> int | None:
+    def _pick_start(self, flag_list: list[str], n: int, duration: int) -> int | None:
         """
         Find a random start index where the window does not overlap existing
         BAD or UNCERTAIN rows. Returns None after 20 failed attempts.
         """
         for _ in range(20):
             candidate = int(self._rng.integers(0, max(1, n - duration)))
-            window_flags = flag_list[candidate: candidate + duration]
+            window_flags = flag_list[candidate : candidate + duration]
             if all(f == "GOOD" for f in window_flags):
                 return candidate
         return None
@@ -250,9 +255,7 @@ def write_bad_windows_registry(registry_rows: list[dict], out_path: Path) -> Non
             "window_end": pl.Series(
                 [r["window_end"] for r in registry_rows], dtype=pl.Datetime("us", "UTC")
             ),
-            "issue_type": pl.Series(
-                [r["issue_type"] for r in registry_rows], dtype=pl.Categorical
-            ),
+            "issue_type": pl.Series([r["issue_type"] for r in registry_rows], dtype=pl.Categorical),
             "severity": pl.Series([r["severity"] for r in registry_rows], dtype=pl.UInt8),
             "injected": pl.Series([r["injected"] for r in registry_rows], dtype=pl.Boolean),
         }

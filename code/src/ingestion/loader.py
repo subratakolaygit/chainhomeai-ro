@@ -1,4 +1,5 @@
 """Ingestion loader — streams validated sensor Parquet as a Polars LazyFrame."""
+
 from __future__ import annotations
 
 import logging

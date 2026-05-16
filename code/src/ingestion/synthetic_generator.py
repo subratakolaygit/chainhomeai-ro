@@ -1,4 +1,5 @@
 """4-year synthetic RO1A sensor dataset generator."""
+
 from __future__ import annotations
 
 import logging
@@ -38,12 +39,22 @@ from config import (
 logger = logging.getLogger(__name__)
 
 # All 12 sensor columns pipe-joined — written to affected_sensors during CIP
-_ALL_SENSORS_STR: str = "|".join([
-    "ro1a_feed_press", "ro1a_inlet_cond", "ro1a_inlet_flow",
-    "ro1a_inlet_orp", "ro1a_inlet_ph", "ro1a_perm_cond",
-    "ro1a_perm_flow", "ro1a_perm_ph", "ro1a_reject_press",
-    "ro1a_reject_flow", "ro1a_perm_press", "ro1a_feed_temp",
-])
+_ALL_SENSORS_STR: str = "|".join(
+    [
+        "ro1a_feed_press",
+        "ro1a_inlet_cond",
+        "ro1a_inlet_flow",
+        "ro1a_inlet_orp",
+        "ro1a_inlet_ph",
+        "ro1a_perm_cond",
+        "ro1a_perm_flow",
+        "ro1a_perm_ph",
+        "ro1a_reject_press",
+        "ro1a_reject_flow",
+        "ro1a_perm_press",
+        "ro1a_feed_temp",
+    ]
+)
 
 # CIP alkaline wash: pH rises, ORP drops, flows go to 0
 _CIP_PH: float = 11.0
@@ -119,7 +130,8 @@ class SyntheticRO1AGenerator:
 
         # NPD — primary membrane health KPI
         npd = (
-            npd_base + slope * hours_since_cip
+            npd_base
+            + slope * hours_since_cip
             + self._rng.normal(0.0, BASE_NOISE_SIGMA["npd"] * noise, n)
         ).astype(np.float32)
         npd[is_cip] = 0.0
@@ -144,7 +156,8 @@ class SyntheticRO1AGenerator:
 
         # Mass-balance approximation: reject = inlet - permeate
         reject_flow = (
-            inlet_flow - perm_flow
+            inlet_flow
+            - perm_flow
             + self._rng.normal(0.0, BASE_NOISE_SIGMA["ro1a_reject_flow"] * noise, n)
         ).astype(np.float32)
 
@@ -167,16 +180,25 @@ class SyntheticRO1AGenerator:
 
         # Independent feed-quality sensors (slow Brownian walk — day-to-day variation)
         inlet_cond = self._random_walk(
-            n, INLET_COND_BENCHMARK, 50.0 * noise,
-            BASE_NOISE_SIGMA["ro1a_inlet_cond"] * noise, (12_000.0, 18_000.0),
+            n,
+            INLET_COND_BENCHMARK,
+            50.0 * noise,
+            BASE_NOISE_SIGMA["ro1a_inlet_cond"] * noise,
+            (12_000.0, 18_000.0),
         )
         inlet_orp = self._random_walk(
-            n, INLET_ORP_BENCHMARK, 5.0 * noise,
-            BASE_NOISE_SIGMA["ro1a_inlet_orp"] * noise, (900.0, 1_400.0),
+            n,
+            INLET_ORP_BENCHMARK,
+            5.0 * noise,
+            BASE_NOISE_SIGMA["ro1a_inlet_orp"] * noise,
+            (900.0, 1_400.0),
         )
         inlet_ph = self._random_walk(
-            n, INLET_PH_BENCHMARK, 0.002 * noise,
-            BASE_NOISE_SIGMA["ro1a_inlet_ph"] * noise, (8.5, 10.5),
+            n,
+            INLET_PH_BENCHMARK,
+            0.002 * noise,
+            BASE_NOISE_SIGMA["ro1a_inlet_ph"] * noise,
+            (8.5, 10.5),
         )
 
         # Permeate conductivity — slow aging drift (salt rejection degrades)
@@ -187,12 +209,24 @@ class SyntheticRO1AGenerator:
         ).astype(np.float32)
 
         perm_ph = self._random_walk(
-            n, PERM_PH_BENCHMARK, 0.001 * noise, 0.01 * noise, (8.0, 10.0),
+            n,
+            PERM_PH_BENCHMARK,
+            0.001 * noise,
+            0.01 * noise,
+            (8.0, 10.0),
         )
 
         # Apply CIP state — flows/pressures/cond go to 0, pH/ORP go chemically abnormal
-        for arr in (feed_press, inlet_flow, perm_flow, reject_flow,
-                    perm_press, reject_press, perm_cond, inlet_cond):
+        for arr in (
+            feed_press,
+            inlet_flow,
+            perm_flow,
+            reject_flow,
+            perm_press,
+            reject_press,
+            perm_cond,
+            inlet_cond,
+        ):
             arr[is_cip] = 0.0
         inlet_ph[is_cip] = _CIP_PH
         inlet_orp[is_cip] = _CIP_ORP
@@ -204,9 +238,7 @@ class SyntheticRO1AGenerator:
         affected: list[str | None] = [_ALL_SENSORS_STR if v else None for v in is_cip]
 
         # Global time index from 2022-01-01 (used as long-run aging feature)
-        days_since_start = ((ts_us - _ORIGIN_US) / (24 * 60 * 60 * 1_000_000)).astype(
-            np.float32
-        )
+        days_since_start = ((ts_us - _ORIGIN_US) / (24 * 60 * 60 * 1_000_000)).astype(np.float32)
 
         return pl.DataFrame(
             {
@@ -327,11 +359,9 @@ class SyntheticRO1AGenerator:
         next_start_idx = np.searchsorted(starts, idx, side="right")
         in_bounds = next_start_idx < len(starts)
         rul_hours = np.empty(n, dtype=np.float32)
-        rul_hours[in_bounds] = (
-            (starts[next_start_idx[in_bounds]] - idx[in_bounds]) / 60.0
-        )
+        rul_hours[in_bounds] = (starts[next_start_idx[in_bounds]] - idx[in_bounds]) / 60.0
         beyond = ~in_bounds
-        rul_hours[beyond] = ((n - 1 - idx[beyond]) / 60.0)
+        rul_hours[beyond] = (n - 1 - idx[beyond]) / 60.0
         rul_hours[is_cip] = 0.0
 
         return cip_cycle_num, hours_since_cip, rul_hours, is_cip

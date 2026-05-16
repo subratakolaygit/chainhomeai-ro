@@ -1,4 +1,5 @@
 """Tests for SensorFrameSchema validation."""
+
 from __future__ import annotations
 
 from datetime import UTC
@@ -13,6 +14,7 @@ def _make_valid_frame() -> pl.LazyFrame:
     """Minimal 3-row DataFrame with the correct 23-column schema."""
     n = 3
     from datetime import datetime
+
     data: dict = {
         "timestamp": pl.datetime_range(
             datetime(2022, 1, 1, tzinfo=UTC),
@@ -59,9 +61,7 @@ def test_missing_column_raises() -> None:
 
 
 def test_wrong_dtype_raises() -> None:
-    lf = _make_valid_frame().with_columns(
-        pl.col("ro1a_feed_press").cast(pl.Float64)
-    )
+    lf = _make_valid_frame().with_columns(pl.col("ro1a_feed_press").cast(pl.Float64))
     with pytest.raises(DataIngestionError, match="ro1a_feed_press"):
         SensorFrameSchema.validate(lf)
 

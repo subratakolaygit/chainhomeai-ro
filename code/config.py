@@ -1,4 +1,5 @@
 """Central constants for ChainHomeAI — no magic numbers in pipeline modules."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -133,6 +134,13 @@ BAD_WINDOWS_PER_YEAR: dict[int, dict[str, int]] = {
     2024: {"dropout": 3, "stuck_value": 2, "spike": 3, "calibration_drift": 1, "noise_burst": 1},
     2025: {"dropout": 2, "stuck_value": 1, "spike": 3, "calibration_drift": 0, "noise_burst": 1},
 }
+
+# ---------------------------------------------------------------------------
+# Data quality detection
+# ---------------------------------------------------------------------------
+DATA_QUALITY_STUCK_WINDOW_MINS: int = 30  # rolling window size in rows (1 row = 1 minute)
+DATA_QUALITY_SPIKE_SIGMA: float = 3.0  # spike when |value - benchmark| > sigma × half_range
+DATA_QUALITY_STUCK_STD_EPSILON: float = 1e-6  # rolling std below this → sensor is stuck
 
 # ---------------------------------------------------------------------------
 # Alert thresholds

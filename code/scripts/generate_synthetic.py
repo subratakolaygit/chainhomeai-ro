@@ -4,6 +4,7 @@ Entrypoint: generate the 4-year RO1A synthetic dataset and inject bad windows.
 Run from C:\\chainhomeai\\code\\:
     python scripts/generate_synthetic.py
 """
+
 from __future__ import annotations
 
 import logging
@@ -33,7 +34,9 @@ logger = logging.getLogger(__name__)
 def main() -> None:
     logger.info(
         "Generating synthetic dataset  years %d–%d → %s",
-        DATASET_START_YEAR, DATASET_END_YEAR, SYNTHETIC_DATA_DIR,
+        DATASET_START_YEAR,
+        DATASET_END_YEAR,
+        SYNTHETIC_DATA_DIR,
     )
 
     generator = SyntheticRO1AGenerator(output_dir=SYNTHETIC_DATA_DIR)

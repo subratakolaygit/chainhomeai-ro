@@ -1,4 +1,5 @@
 """TagRegistry — PI-System-inspired per-sensor metadata store."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -85,9 +86,7 @@ class TagRegistry:
             TagRegistryError: Tag not found in registry.
         """
         if column_name not in self._tags:
-            raise TagRegistryError(
-                f"Unknown tag {column_name!r}. Known: {list(self._tags)}"
-            )
+            raise TagRegistryError(f"Unknown tag {column_name!r}. Known: {list(self._tags)}")
         return self._tags[column_name]
 
     def all_tags(self) -> list[TagSpec]:

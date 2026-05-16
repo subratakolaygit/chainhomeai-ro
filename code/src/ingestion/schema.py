@@ -1,4 +1,5 @@
 """Expected Polars schema for the RO1A synthetic dataset and its validator."""
+
 from __future__ import annotations
 
 import polars as pl

@@ -1,4 +1,5 @@
 """Custom exception classes for the ingestion pipeline."""
+
 from __future__ import annotations
 
 

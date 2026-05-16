@@ -1,4 +1,5 @@
 """Tests for ingest_synthetic_data and load_bad_windows_registry."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -77,6 +78,7 @@ def _write_mini_registry(path: Path) -> None:
 # ingest_synthetic_data
 # ------------------------------------------------------------------
 
+
 def test_returns_lazyframe(tmp_path: Path) -> None:
     data_dir = _write_mini_parquet(tmp_path)
     result = ingest_synthetic_data(data_dir)
@@ -107,6 +109,7 @@ def test_nonexistent_dir_raises() -> None:
 # ------------------------------------------------------------------
 # load_bad_windows_registry
 # ------------------------------------------------------------------
+
 
 def test_registry_returns_lazyframe(tmp_path: Path) -> None:
     reg_path = tmp_path / "registry.parquet"

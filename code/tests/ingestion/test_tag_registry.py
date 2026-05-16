@@ -1,4 +1,5 @@
 """Tests for TagSpec and TagRegistry."""
+
 from __future__ import annotations
 
 import pytest
@@ -55,7 +56,7 @@ def test_tagspec_invalid_range_raises() -> None:
             idle_value=None,
             stabilization_mins=0.0,
             allowed_variance_pct=5.0,
-            normal_range_min=200.0,   # min > benchmark — invalid
+            normal_range_min=200.0,  # min > benchmark — invalid
             normal_range_max=300.0,
             failure_indicator="Test",
         )
