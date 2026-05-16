@@ -397,3 +397,25 @@ The data foundation is complete. A reproducible 4-year synthetic sensor dataset 
 - No stabilisation ramp after CIP completion (sensors jump back to operating values instantly rather than ramping over `stabilization_mins`). Acceptable for Phase 1; will be corrected in Phase 2 feature engineering.
 - Bad window `affected_sensors` during CIP is set to all 12 sensors for simplicity; Phase 2 Stage 2 (Data Quality) will refine per-sensor flagging.
 - Phase 2A next: plan PI-System-inspired feature engineering (rolling statistics, delta tags, NPD trend slope, CIP cycle detection).
+
+---
+
+## [2026-05-16] — Phase 1D: Algorithmic Data Quality Detection
+
+### Component Introduced
+
+- **DataQualityDetector** (`src/ingestion/data_quality.py`): `detect_data_quality(lf, registry)` runs on any Polars LazyFrame and discovers bad sensor data algorithmically — without prior knowledge of where faults were injected. Two detection methods are applied per sensor:
+  1. **Stuck-value detection**: rolling standard deviation over a configurable window (default 30 rows = 30 minutes); std ≤ 1e-6 flags the row as `BAD / stuck_value`. Null std (incomplete window or all-NaN dropout) is treated as not-stuck.
+  2. **Spike detection**: value outside the normal operating range (`range_min`, `range_max`) or absolute deviation from benchmark exceeding `sigma × half_range_width` (default sigma = 3.0) flags the row as `BAD / spike`.
+  Priority rule: `stuck_value` beats `spike` when both fire on the same row. Only rows currently labelled `GOOD` are promoted to `BAD` — existing `BAD` (injected faults) and `UNCERTAIN` (CIP windows) are preserved unchanged. All operations remain lazy; `.collect()` is never called inside the module. Affected sensor names are written as a comma-separated string into `data_quality_affected_sensors`.
+
+- **config.py additions**: `DATA_QUALITY_STUCK_WINDOW_MINS = 30`, `DATA_QUALITY_SPIKE_SIGMA = 3.0`, `DATA_QUALITY_STUCK_STD_EPSILON = 1e-6`.
+
+### What This Phase Achieves
+
+Phase 1 (Data Foundation) is complete. The pipeline can now ingest any sensor LazyFrame — real or synthetic — and algorithmically flag bad data quality windows without relying on ground-truth labels. This makes the system ready for real plant data where faults are unknown in advance. The 8 new tests (30 total in `tests/ingestion/`) verify clean-data pass-through, spike detection, stuck-value detection, out-of-range detection, multi-sensor attribution, injected-label preservation, and priority ordering.
+
+### Known Limitations / Next Steps
+
+- Detection is row-by-row; calibration drift (slow sensor bias over days/weeks) is not yet detected algorithmically. Planned for Phase 2 feature engineering as a rolling-mean drift check.
+- Phase 2A next: PI-System-inspired feature engineering (rolling statistics, delta tags, NPD trend slope, CIP cycle detection).
